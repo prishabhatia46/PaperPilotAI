@@ -510,3 +510,8 @@ body {
   color: #f87171;
   border: 1px solid rgba(239,68,68,0.3);
 }
+@media print {
+  details { display: block !important; }
+  details summary { display: none !important; }
+  details p { display: block !important; }
+}
