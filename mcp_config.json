@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "scholarpath-ai": {
+      "command": "python",
+      "args": ["C:/Users/Prisha Bhatia/scholarpath-ai/mcp_server.py"],
+      "env": {
+        "GROQ_API_KEY": "your_groq_api_key_here"
+      }
+    }
+  }
+}
