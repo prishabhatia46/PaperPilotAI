@@ -68,11 +68,6 @@ Each paper includes:
 
 * Ask questions about a specific paper
 
-### 📝 Quiz Mode
-
-* Auto-generated MCQs
-* Test understanding of concepts
-
 ### 📄 Related Papers
 
 * Discover similar research automatically
