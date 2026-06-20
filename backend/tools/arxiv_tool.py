@@ -1,6 +1,7 @@
 import arxiv
 import requests
 import time
+import os
 from typing import List, Dict
 
 def search_arxiv_papers(query: str, max_results: int = 5, offset: int = 0) -> List[Dict]:
@@ -32,7 +33,16 @@ def search_arxiv_papers(query: str, max_results: int = 5, offset: int = 0) -> Li
 
 def fetch_paper_from_url(url: str) -> Dict:
     try:
-        arxiv_id = url.split("/")[-1].replace(".pdf", "")
+        # Extract arxiv ID from different URL formats
+        arxiv_id = ""
+        if "arxiv.org/abs/" in url:
+            arxiv_id = url.split("arxiv.org/abs/")[-1].split("v")[0].strip()
+        elif "arxiv.org/pdf/" in url:
+            arxiv_id = url.split("arxiv.org/pdf/")[-1].replace(".pdf", "").split("v")[0].strip()
+        
+        if not arxiv_id:
+            return None
+            
         client = arxiv.Client()
         search = arxiv.Search(id_list=[arxiv_id])
         results = list(client.results(search))
@@ -73,7 +83,9 @@ def search_semantic_scholar(query: str, max_results: int = 5) -> List[Dict]:
             "fields": "title,authors,abstract,year,citationCount,externalIds,openAccessPdf",
             "sort": "citationCount:desc"
         }
-        response = requests.get(url, params=params, timeout=10)
+        api_key = os.environ.get("SEMANTIC_SCHOLAR_API_KEY", "")
+        headers = {"x-api-key": api_key} if api_key else {}
+        response = requests.get(url, params=params, headers=headers, timeout=15)
         data = response.json()
         
         papers = []
@@ -90,6 +102,8 @@ def search_semantic_scholar(query: str, max_results: int = 5) -> List[Dict]:
                 pdf_url = f"https://doi.org/{p['externalIds']['DOI']}"
             elif p.get("externalIds", {}).get("ACM"):
                 pdf_url = f"https://dl.acm.org/doi/{p['externalIds']['ACM']}"
+            if "localhost" in pdf_url or "127.0.0.1" in pdf_url:
+               pdf_url = ""
             
             papers.append({
                 "id": p.get("paperId", ""),
@@ -115,10 +129,10 @@ def search_openalex(query: str, max_results: int = 8) -> List[Dict]:
             "search": query,
             "per-page": max_results,
             "sort": "cited_by_count:desc",
-            "filter": "open_access.is_oa:true,primary_topic.domain.id:https://openalex.org/domains/3",
+           "filter": "open_access.is_oa:true",
             "select": "title,authorships,abstract_inverted_index,publication_year,cited_by_count,primary_location,id"
         }
-        response = requests.get(url, params=params, timeout=10, headers={"User-Agent": "ScholarPathAI/1.0"})
+        response = requests.get(url, params=params, headers={"User-Agent": "PaperPilotAI/1.0"}, timeout=15)
         data = response.json()
         
         papers = []
@@ -156,3 +170,32 @@ def search_openalex(query: str, max_results: int = 8) -> List[Dict]:
     except Exception as e:
         print(f"OpenAlex error: {e}")
         return []
+def get_bulk_citations(papers: list) -> list:
+    
+    try:
+        titles = [p["title"] for p in papers]
+        url = "https://api.semanticscholar.org/graph/v1/paper/batch"
+        
+        # Pehle paper IDs dhundho
+        results = []
+        for title in titles:
+            try:
+                r = requests.get(
+                    "https://api.semanticscholar.org/graph/v1/paper/search",
+                    params={"query": title, "fields": "citationCount", "limit": 1},
+                    timeout=3
+                )
+                data = r.json()
+                if data.get("data"):
+                    results.append(data["data"][0].get("citationCount", 0))
+                else:
+                    results.append(0)
+            except:
+                results.append(0)
+        
+        for i, paper in enumerate(papers):
+            if i < len(results):
+                paper["citation_count"] = results[i]
+    except:
+        pass
+    return papers

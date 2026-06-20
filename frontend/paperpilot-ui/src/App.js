@@ -4,7 +4,7 @@ import 'regenerator-runtime/runtime';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import './App.css';
 
-const API = 'http://localhost:8000';
+const API = 'http://localhost:8001';
 
 export default function App() {
   const [query, setQuery] = useState('');
@@ -32,8 +32,12 @@ export default function App() {
   const [keywordSearch, setKeywordSearch] = useState({});
   const [sortBy, setSortBy] = useState('relevant');
   const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+  const [darkMode, setDarkMode] = useState(true);
   useEffect(() => { if (transcript) setQuery(transcript); }, [transcript]);
   useEffect(() => { localStorage.setItem('readPapers', JSON.stringify(readPapers)); }, [readPapers]);
+  useEffect(() => {
+  document.body.className = darkMode ? 'dark' : 'light';
+}, [darkMode]);
 
   const search = async (q) => {
     const sq = q || query;
@@ -65,11 +69,12 @@ export default function App() {
       if (res.data.error) { setError(res.data.error); }
       else {
         setResults({
-          papers: [res.data.paper],
-          learning_path: { steps: res.data.learning_path },
-          research_gaps: res.data.research_gaps,
-          related_from_url: res.data.related
-        });
+  papers: [res.data.paper],
+  learning_path: { steps: res.data.learning_path },
+  research_gaps: res.data.research_gaps || [],
+  related_from_url: res.data.related || [],
+  url_mode: true
+});
       }
     } catch { setError('Could not analyze URL.'); }
     setLoading(false);
@@ -86,12 +91,25 @@ export default function App() {
   const toggleRead = (id) => setReadPapers(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const toggleCompare = (paper) => {
-    setComparePapers(prev => {
-      if (prev.find(p => p.id === paper.id)) return prev.filter(p => p.id !== paper.id);
-      if (prev.length >= 2) return [prev[1], paper];
-      return [...prev, paper];
-    });
-  };
+  setComparePapers(prev => {
+    let updated;
+    if (prev.find(p => p.id === paper.id)) {
+      updated = prev.filter(p => p.id !== paper.id);
+    } else if (prev.length >= 2) {
+      updated = [prev[1], paper];
+    } else {
+      updated = [...prev, paper];
+    }
+
+    if (updated.length === 2) {
+      setTimeout(() => {
+        document.querySelector('.compare-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
+    return updated;
+  });
+};
 
   const runCompare = async () => {
     if (comparePapers.length < 2) return;
@@ -115,13 +133,15 @@ export default function App() {
     } catch { setQuizData('Failed to load quiz.'); }
   };
 
-  const  fetchRelated = async (paper) => {
+  const fetchRelated = async (paper) => {
+    console.log("fetchRelated called for:", paper.id, paper.title);
     setRelatedMap(prev => ({ ...prev, [paper.id]: 'loading' }));
     try {
-      const res = await axios.post(`${API}/related`, { paper_title: paper.title, paper_abstract: paper.abstract });
+      const res = await axios.post(`${API}/related`, { paper_title: paper.title, paper_abstract: paper.abstract || ''});
+      console.log("Related response:", res.data);
       setRelatedMap(prev => ({ ...prev, [paper.id]: res.data.related }));
-    } catch {}
-  };
+    } catch(e) { console.log("Related error:", e); }
+};
 
   const fetchExplain = async (paper, level) => {
     setExplainLevel(prev => ({ ...prev, [paper.id]: level }));
@@ -151,7 +171,7 @@ export default function App() {
   return 0;
 }) : [];
   return (
-    <div className="app">
+    <div className={`app ${darkMode ? 'dark' : 'light'}`}>
       <header className="header">
         <div className="header-inner">
           <div className="logo">
@@ -170,6 +190,9 @@ export default function App() {
               </button>
             )}
           </nav>
+          <button className="theme-toggle" onClick={() => setDarkMode(!darkMode)}>
+  {darkMode ? '☀️ Light' : '🌙 Dark'}
+</button>
         </div>
       </header>
 
@@ -207,7 +230,7 @@ export default function App() {
                 className="search-input"
                 value={urlInput}
                 onChange={e => setUrlInput(e.target.value)}
-                placeholder="Paste ArXiv paper URL... e.g. https://arxiv.org/abs/2301.00000"
+               placeholder="Paste any research paper URL... e.g. IEEE, Springer, Nature, ArXiv"
               />
               <button className="search-btn" onClick={analyzeUrl} disabled={loading}>
                 {loading ? 'Analyzing...' : 'Analyze'}
@@ -252,6 +275,19 @@ export default function App() {
 
         {results && (
           <div className="results">
+            {results?.url_mode && results?.related_from_url?.length > 0 && (
+  <div style={{marginBottom: '1rem'}}>
+    <button className="load-more-btn" onClick={() => {
+      setResults(prev => ({
+        ...prev,
+        papers: [...prev.papers, ...prev.related_from_url],
+        url_mode: false
+      }));
+    }}>
+      Find Related Papers
+    </button>
+  </div>
+)}
             {totalPapers > 0 && (
               <div className="progress-wrap">
                 <span className="progress-label">Reading Progress: {readCount}/{totalPapers} papers</span>
@@ -278,7 +314,7 @@ export default function App() {
                   <div key={i} className={`paper-card ${readPapers.includes(paper.id) ? 'read' : ''} ${comparePapers.find(p => p.id === paper.id) ? 'selected-compare' : ''}`}>
                     <div className="paper-meta">
                       <span className={`diff-badge ${paper.difficulty?.level}`}>{paper.difficulty?.level}</span>
-                      <span className="meta-item">{paper.citation_count} citations</span>
+                      {paper.citation_count > 0 && <span className="meta-item">{paper.citation_count} citations</span>}
                       <span className="meta-item">{paper.published}</span>
                     </div>
                     <h3 className="paper-title">{paper.title}</h3>
@@ -292,30 +328,25 @@ export default function App() {
   />
   {keywordSearch[paper.id] && (
     <span className={`keyword-result ${
-      paper.abstract?.toLowerCase().includes(keywordSearch[paper.id].toLowerCase()) ||
-       paper.title?.toLowerCase().includes(keywordSearch[paper.id].toLowerCase()) ||
-       paper.eli5?.toLowerCase().includes(keywordSearch[paper.id].toLowerCase()) ||
-       paper.technical_summary?.toLowerCase().includes(keywordSearch[paper.id].toLowerCase()) ||
-       paper.limitations?.toLowerCase().includes(keywordSearch[paper.id].toLowerCase())
-        ? '✓ Found in this paper' : '✗ Not found in this paper'}
+      (() => {
+        const kw = keywordSearch[paper.id].toLowerCase();
+        const content = `${paper.title} ${paper.abstract} ${paper.eli5} ${paper.technical_summary} ${paper.limitations}`.toLowerCase();
+        return kw.split(' ').some(word => word.length > 2 && content.includes(word));
+      })() ? 'found' : 'not-found'
     }`}>
-      {paper.abstract?.toLowerCase().includes(keywordSearch[paper.id].toLowerCase()) ||
-       paper.title?.toLowerCase().includes(keywordSearch[paper.id].toLowerCase()) ||
-       paper.eli5?.toLowerCase().includes(keywordSearch[paper.id].toLowerCase()) ||
-       paper.technical_summary?.toLowerCase().includes(keywordSearch[paper.id].toLowerCase()) ||
-       paper.limitations?.toLowerCase().includes(keywordSearch[paper.id].toLowerCase())
-        ? '✓ Found in this paper' : '✗ Not found in this paper'}
+      {(() => {
+        const kw = keywordSearch[paper.id].toLowerCase();
+        const content = `${paper.title} ${paper.abstract} ${paper.eli5} ${paper.technical_summary} ${paper.limitations}`.toLowerCase();
+        return kw.split(' ').some(word => word.length > 2 && content.includes(word));
+      })() ? '◆ Found in this paper' : '◇ Not found in this paper'}
     </span>
-  )}
-</div>
-
-
-                    <div className="tabs">
-  {paper.eli5 && <details><summary>Simple Explanation</summary><p>{paper.eli5}</p><button className="text-btn" onClick={() => speak(paper.eli5)}>{speaking ? 'Stop Reading' : 'Read Aloud'}</button></details>}
-  {paper.technical_summary && <details><summary>Technical Summary</summary><p>{paper.technical_summary}</p></details>}
-  {paper.limitations && <details><summary>Limitations</summary><p>{paper.limitations}</p></details>}
-</div>
-
+ )}
+        </div>
+        <div className="tabs">
+          <details><summary>Simple Explanation</summary><p>{paper.eli5 || 'Not available'}</p><button className="text-btn" onClick={() => speak(paper.eli5)}>{speaking ? 'Stop Reading' : 'Read Aloud'}</button></details>
+          <details><summary>Technical Summary</summary><p>{paper.technical_summary || 'Not available'}</p><button className="text-btn" onClick={() => speak(paper.technical_summary)}>{speaking ? 'Stop Reading' : 'Read Aloud'}</button></details>
+          <details><summary>Limitations</summary><p>{paper.limitations || 'Not available'}</p><button className="text-btn" onClick={() => speak(paper.limitations)}>{speaking ? 'Stop Reading' : 'Read Aloud'}</button></details>
+        </div>
                     <div className="paper-actions">
                       <a href={paper.pdf_url} target="_blank" rel="noreferrer" className="btn btn-primary">
   {paper.pdf_url?.includes('arxiv') ? 'Read Paper (Free)' : paper.pdf_url?.includes('doi.org') ? 'View on DOI' : paper.pdf_url?.includes('acm') ? 'View on ACM' : 'View Paper'}
@@ -341,11 +372,11 @@ export default function App() {
         <a href={rp.pdf_url} target="_blank" rel="noreferrer">{rp.title}</a>
         <span className="meta-item">{rp.published}</span>
         <button
-          className={`btn ${comparePapers.find(p => p.id === rp.id) ? 'btn-warning' : 'btn-secondary'}`}
-          style={{fontSize: '0.7rem', padding: '0.2rem 0.5rem'}}
-          onClick={() => toggleCompare({...rp, abstract: rp.abstract || paper.abstract})}>
-          {comparePapers.find(p => p.id === rp.id) ? 'Remove' : 'Compare'}
-        </button>
+  className={`btn ${comparePapers.find(p => p.title === rp.title) ? 'btn-warning' : 'btn-secondary'}`}
+  style={{fontSize: '0.7rem', padding: '0.2rem 0.5rem'}}
+  onClick={() => toggleCompare({...rp, id: rp.title, abstract: rp.abstract || paper.abstract})}>
+  {comparePapers.find(p => p.title === rp.title) ? 'Remove' : 'Compare'}
+</button>
       </div>
     ))}
   </div>
@@ -356,7 +387,7 @@ export default function App() {
                   </div>
                 ))}
 
-                {results.papers?.length >= 5 && (
+                {results.papers?.length >= 3 && (
                   <button className="load-more-btn" onClick={loadMore} disabled={loadingMore}>
                     {loadingMore ? 'Loading...' : 'Load More Papers'}
                   </button>
@@ -370,7 +401,7 @@ export default function App() {
                     {results.learning_path?.steps?.split('\n').filter(Boolean).map((step, i) => (
                       <div key={i} className="step-card">
                         <div className="step-number">{i + 1}</div>
-                        <p>{step.replace(/^Step \d+:/, '').trim()}</p>
+                        <p>{step.replace(/^Step \d+:/, '').replace(/\*\*/g, '').replace(/\*/g, '').trim()}</p>
                       </div>
                     ))}
                   </div>
@@ -379,21 +410,11 @@ export default function App() {
                 <div className="card">
                   <h2>Research Gaps</h2>
                   {results.research_gaps?.length > 0
-                    ? results.research_gaps.map((gap, i) => <div key={i} className="gap-item">{gap}</div>)
+                     ? results.research_gaps.map((gap, i) => <div key={i} className="gap-item">{gap.replace(/\*\*/g, '').replace(/\*/g, '')}</div>)
                     : <p className="hint">No gaps identified.</p>}
                 </div>
 
-                {results.related_from_url && (
-                  <div className="card">
-                    <h2>Related Papers</h2>
-                    {results.related_from_url.map((rp, i) => (
-                      <div key={i} className="related-item">
-                        <span className={`diff-badge ${rp.difficulty?.level}`}>{rp.difficulty?.level}</span>
-                        <a href={rp.pdf_url} target="_blank" rel="noreferrer">{rp.title}</a>
-                      </div>
-                    ))}
-                  </div>
-                )}
+      
 
                 <button className="export-btn" onClick={() => window.print()}>Export as PDF</button>
               </div>
