@@ -4,7 +4,7 @@ import 'regenerator-runtime/runtime';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import './App.css';
 
-const API = 'http://localhost:8001';
+const API = 'https://paperpilotai-production.up.railway.app';
 
 export default function App() {
   const [query, setQuery] = useState('');
