@@ -80,3 +80,34 @@ async def generate_explanations_parallel(papers: list) -> list:
     for paper, result in zip(papers, results):
         paper.update(result)
     return papers
+def retrieve_papers_from_chromadb(query: str, threshold: int = 3) -> list:
+    """
+    Query se ChromaDB mein search karo.
+    Agar enough papers mile toh return karo, warna empty list.
+    """
+    try:
+        vectorstore = get_vectorstore()
+        docs = vectorstore.similarity_search(query, k=10)
+        
+        if len(docs) < threshold:
+            return []  # Enough papers nahi mile → API use karo
+        
+        # Unique papers nikalo metadata se
+        seen = set()
+        papers = []
+        for doc in docs:
+            pid = doc.metadata.get("paper_id")
+            if pid and pid not in seen:
+                seen.add(pid)
+                papers.append({
+                    "id": pid,
+                    "title": doc.metadata.get("title", ""),
+                    "pdf_url": doc.metadata.get("pdf_url", ""),
+                    "abstract": doc.page_content,
+                    "citation_count": 0,
+                    "published": "",
+                    "source": "chromadb"
+                })
+        return papers
+    except:
+        return []

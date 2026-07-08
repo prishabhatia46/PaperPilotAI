@@ -81,27 +81,50 @@ Reply with only: ARXIV or SEMANTIC""").strip().upper()
         if "ARXIV" in decision:
             result = await run_scholar_pipeline(request.query)
         else:
-            from backend.rag.paper_rag import ingest_papers, generate_explanations_parallel
-            papers = search_semantic_scholar(request.query, max_results=5)
-            if not papers:
-                result = await run_scholar_pipeline(request.query)
+           
+            from backend.rag.paper_rag import ingest_papers, generate_explanations_parallel, retrieve_papers_from_chromadb
+            cached_papers = retrieve_papers_from_chromadb(request.query)
+
+            if cached_papers:
+                print(f"ChromaDB se {len(cached_papers)} papers mile")
+                for paper in cached_papers:
+                    paper["difficulty"] = classify_difficulty(
+                        paper["abstract"],
+                        paper["citation_count"],
+                        paper["published"]
+                    )
+                papers = await generate_explanations_parallel(cached_papers)
             else:
+                print("ChromaDB empty — API se fetch kar rahe hain")
+                papers = search_semantic_scholar(request.query, max_results=5)
+                if not papers:
+                    result = await run_scholar_pipeline(request.query)
+                    return {
+                        "papers": result["explained_papers"],
+                        "learning_path": result["learning_path"],
+                        "research_gaps": result["research_gaps"]
+                    }
                 for paper in papers:
-                    paper["difficulty"] = classify_difficulty(paper["abstract"], paper["citation_count"], paper["published"])
+                    paper["difficulty"] = classify_difficulty(
+                        paper["abstract"],
+                        paper["citation_count"],
+                        paper["published"]
+                    )
                 papers = await generate_explanations_parallel(papers)
                 ingest_papers(papers)
-                path = safe_llm(f"""Create a 5-step learning path for: {request.query}
+
+            path = safe_llm(f"""Create a 5-step learning path for: {request.query}
 Papers: {[p['title'] for p in papers]}
 Format: Step 1: [paper] - [reason]""")
-                gaps = safe_llm(f"""Identify 3 research gaps for: {request.query}
+            gaps = safe_llm(f"""Identify 3 research gaps for: {request.query}
 Based on: {[p['abstract'][:200] for p in papers[:3]]}
 Format: Gap: [specific area]""")
-                gap_list = [l.replace("Gap:", "").strip() for l in gaps.split("\n") if "Gap:" in l]
-                result = {
-                    "explained_papers": papers,
-                    "learning_path": {"steps": path},
-                    "research_gaps": gap_list
-                }
+            gap_list = [l.replace("Gap:", "").strip() for l in gaps.split("\n") if "Gap:" in l]
+            result = {
+                "explained_papers": papers,
+                "learning_path": {"steps": path},
+                "research_gaps": gap_list
+            }
 
         return {
             "papers": result["explained_papers"],
@@ -121,9 +144,15 @@ Format: Gap: [specific area]""")
 
 @app.post("/chat")
 async def chat_about_paper(request: ChatRequest):
+    from backend.rag.paper_rag import retrieve_chat_context
+
+    context = retrieve_chat_context(request.paper_title, request.question)
+    if not context:
+        context = request.paper_abstract
+
     response = safe_llm(f"""You are a research paper expert. Answer clearly and concisely.
 Paper Title: {request.paper_title}
-Abstract: {request.paper_abstract}
+Context: {context}
 Question: {request.question}
 Answer in 2-3 sentences.""")
     return {"answer": response}
