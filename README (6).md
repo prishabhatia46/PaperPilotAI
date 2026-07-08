@@ -1,129 +1,380 @@
-# PaperPilot AI
+# 🎓 PaperPilotAI
 
-**Find, understand, and master any research topic — without getting lost in academic jargon.**
+### Multi-Agent Research Paper Discovery & Understanding Platform
 
-🔗 **Live Demo:** [paper-pilot-ai-sigma.vercel.app](https://paper-pilot-ai-sigma.vercel.app) *(Best viewed on desktop)*
+A production-ready AI-powered research assistant that helps students, researchers, and academics find, understand, and master any research topic through intelligent multi-agent orchestration, RAG pipelines, and adaptive explanations.
 
----
-
-## What is this?
-
-PaperPilot AI is a multi-agent research assistant that takes a topic you care about and does the heavy lifting — fetching real academic papers, explaining them in plain English, and helping you figure out where to start and what's still unsolved.
-
-It's built for students, researchers, and curious people who want to actually understand a field, not just skim abstracts.
-
----
-
-## Features
-
-- **Smart Paper Search** — pulls papers from ArXiv, Semantic Scholar, and OpenAlex, then scores each one for relevance using an LLM (1–10 scoring, not a binary filter)
-- **Difficulty Classification** — every paper is tagged as Beginner, Intermediate, or Advanced based on citation count, age, and abstract complexity
-- **Simple Explanation / Technical Summary / Limitations** — three tabs per paper, each written for a different audience
-- **Learning Path** — tells you which papers to read first and why, specific to your query
-- **Research Gaps** — identifies what's still unanswered in the field
-- **Paper Comparison** — side-by-side breakdown of methodology, contributions, and verdict
-- **URL Analyzer** — paste any ArXiv link and get the full breakdown instantly
-- **AI Chat** — ask anything about a specific paper
-- **Quiz Mode** — test your understanding with auto-generated MCQs
-- **Related Papers** — find similar work with smart query generation
-- **Keyword Search** — fuzzy search within any paper's content
-- **Voice Search** — speak your query instead of typing
-- **PDF Export** — export learning path and research gaps as a PDF
-- **Dark / Light Theme** — Warm Scholar dark + Parchment light
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_Website-4F46E5?style=for-the-badge)](https://paper-pilot-ai-sigma.vercel.app)
+[![GitHub](https://img.shields.io/badge/GitHub-PaperPilotAI-black?style=for-the-badge&logo=github)](https://github.com/prishabhatia46/PaperPilotAI)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.136-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-6366F1?style=for-the-badge)](https://langchain-ai.github.io/langgraph)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
 ---
 
-## Tech Stack
+## 🎥 Product Walkthrough
 
-| Layer | Tech |
-|-------|------|
-| Frontend | React, CSS (custom themes) |
-| Backend | FastAPI, Python |
-| Agents | LangGraph (multi-agent pipeline) |
-| LLM | Groq (Llama 3.3 70B) |
-| RAG | ChromaDB + HuggingFace Embeddings |
-| Paper Sources | ArXiv, Semantic Scholar, OpenAlex |
-| Deployment | Railway (backend) + Vercel (frontend) |
-| Containerization | Docker |
+[![Watch Demo](https://img.shields.io/badge/▶_Watch_Demo-Google_Drive-red?style=for-the-badge&logo=google-drive)](https://drive.google.com/file/d/1z4Cl5T10Y4taQrNmDTErgvc26ACFFjZ9/view?usp=sharing)
+
+*Click to watch a full walkthrough of the application.*
 
 ---
 
-## Architecture
+## ✨ Introduction
+
+PaperPilotAI is a **production-grade multi-agent research assistant** built for students, researchers, and academics who want to go beyond keyword search and actually understand the papers they find.
+
+Rather than building another basic paper search tool, PaperPilotAI orchestrates multiple specialized AI agents that work in parallel — fetching papers across ArXiv, Semantic Scholar, and OpenAlex, classifying their difficulty, generating layered explanations, building personalized learning paths, and identifying research gaps — all in a single search.
+
+Built with a modern async FastAPI backend, LangGraph multi-agent orchestration, ChromaDB vector store, and a React frontend with voice search and dark/light themes.
+
+---
+
+## 💡 Why PaperPilotAI?
+
+Research paper discovery is broken for most students.
+
+Search engines return papers. But understanding them — knowing which to read first, what the limitations are, how they connect — requires hours of manual work.
+
+PaperPilotAI was built to solve this gap. Instead of just returning links, it reads the papers for you, explains them at your level, ranks them by difficulty, and tells you exactly what order to study them in.
+
+The result is a tool that compresses hours of literature review into minutes — and makes cutting-edge research accessible to anyone, not just domain experts.
+
+---
+
+## 🚀 What Makes PaperPilotAI Different?
+
+### 🤖 Multi-Agent Orchestration
+Not a chatbot — a pipeline of specialized agents. A Supervisor Agent coordinates Fetcher, Classifier, Explainer, and Learning Path agents running in sequence via LangGraph. Each agent has a single job and does it well.
+
+### 🧠 Adaptive Explanations
+Three audience levels — Beginner, Student, Expert — powered by Groq LLM. The same paper explained differently based on who's asking.
+
+### 🔍 RAG-Powered Understanding
+Paper abstracts are chunked, embedded with HuggingFace `all-MiniLM-L6-v2`, and stored in ChromaDB. Explanations are grounded in retrieved context, not hallucinated.
+
+### 📊 Difficulty Classification
+A custom rule-based + heuristic classifier scores each paper as Beginner / Intermediate / Advanced based on citation count, publication year, and abstract vocabulary — giving users an instant signal before they commit to reading.
+
+### 🗺️ Research Gap Finder
+After analyzing fetched papers, the LLM identifies unexplored areas in the topic — a feature almost no research tool offers, and genuinely useful for project ideation and thesis topics.
+
+### 🔌 MCP Server
+A custom Model Context Protocol server exposes ScholarPath tools so any AI agent — Claude Desktop, VS Code Copilot — can use PaperPilotAI's search and learning path generation directly from the IDE.
+
+---
+
+## 🌟 Core Features
+
+| 🔍 Discovery | 🧠 Understanding |
+|---|---|
+| Multi-source paper search | ELI5 / Student / Expert explanations |
+| ArXiv + Semantic Scholar + OpenAlex | Technical summary & limitations |
+| ArXiv URL paper analysis | Paper-specific AI chat |
+| Voice search | Read-aloud via Web Speech API |
+| Load more papers | Difficulty badge (Beginner / Intermediate / Advanced) |
+
+| 📚 Learning | ⚡ Power Features |
+|---|---|
+| Personalized learning path | Paper comparison (side-by-side AI analysis) |
+| Step-by-step reading order | Quiz mode (MCQ with scoring) |
+| Research gap identification | Related paper suggestions |
+| Reading progress tracker | PDF / print export |
+| Mark as read | MCP server for IDE integration |
+
+---
+
+## 🏗 System Architecture
 
 ```
-User Query
-    ↓
-paper_fetcher_agent   → ArXiv + Semantic Scholar + OpenAlex
-    ↓
-classifier_agent      → Beginner / Intermediate / Advanced
-    ↓
-explainer_agent       → ELI5 + Technical Summary + Limitations (parallel)
-    ↓
-learning_path_agent   → Learning Path + Research Gaps
-    ↓
-Response to Frontend
+graph TD
+    User["👤 Student / Researcher"]
+    User --> Frontend["React Frontend\n(Vercel)"]
+    Frontend --> API["FastAPI Backend\n(Railway - Port 8001)"]
+    API --> Supervisor["🧠 Supervisor Agent\n(LangGraph)"]
+    Supervisor --> Fetcher["📡 Fetcher Agent"]
+    Supervisor --> Classifier["🏷️ Classifier Agent"]
+    Supervisor --> Explainer["💡 Explainer Agent"]
+    Supervisor --> PathGen["🗺️ Path Generator Agent"]
+    Fetcher --> ArXiv["ArXiv API"]
+    Fetcher --> SemanticScholar["Semantic Scholar API"]
+    Fetcher --> OpenAlex["OpenAlex API"]
+    Explainer --> RAG["RAG Pipeline"]
+    RAG --> ChromaDB[("ChromaDB\nVector Store")]
+    RAG --> Embeddings["HuggingFace\nEmbeddings"]
+    Explainer --> Groq["Groq LLM\n(llama-3.3-70b)"]
+    PathGen --> Groq
+    API --> MCP["MCP Server\n(IDE Integration)"]
 ```
 
 ---
 
-## Project Structure
+## 🔄 Agent Pipeline Flow
+
+```
+flowchart LR
+    A["User Query"] --> B["Supervisor Agent"]
+    B --> C["Fetcher Agent\nArXiv + Semantic Scholar + OpenAlex"]
+    C --> D["Classifier Agent\nDifficulty Scoring"]
+    D --> E["Explainer Agent\nRAG + Groq LLM"]
+    E --> F["Path Generator Agent\nLearning Path + Research Gaps"]
+    F --> G["React Frontend\nPapers + Path + Gaps"]
+
+    B2["Paper URL"] --> H["URL Analyzer\nDirect ArXiv Fetch"]
+    H --> E
+```
+
+---
+
+## 🧠 RAG Pipeline
+
+```
+flowchart TD
+    A["Paper Abstract"] --> B["Text Chunker\nRecursiveCharacterTextSplitter\nchunk=500, overlap=100"]
+    B --> C["HuggingFace Embeddings\nall-MiniLM-L6-v2"]
+    C --> D[("ChromaDB\nVector Store")]
+    E["User Query / Paper Context"] --> F["Semantic Search"]
+    D --> F
+    F --> G["Retrieved Chunks"]
+    G --> H["Groq LLM\nllama-3.3-70b-versatile"]
+    H --> I["ELI5 / Technical / Limitations\nExplanation"]
+```
+
+---
+
+## ⚡ At a Glance
+
+| | |
+|---|---|
+| **Frontend** | React 18 + Axios + Web Speech API |
+| **Backend** | FastAPI + Uvicorn (async) |
+| **Agent Orchestration** | LangGraph multi-agent supervisor pattern |
+| **LLM** | Groq (llama-3.3-70b-versatile) |
+| **Vector Store** | ChromaDB |
+| **Embeddings** | HuggingFace all-MiniLM-L6-v2 |
+| **Paper Sources** | ArXiv + Semantic Scholar + OpenAlex |
+| **Deployment** | Vercel (frontend) + Railway (backend) |
+
+---
+
+## ⚙ Technology Stack
+
+| Frontend | Backend | AI / ML | Infrastructure |
+|---|---|---|---|
+| React 18 | FastAPI | LangGraph | Vercel |
+| Axios | Python 3.12 | Groq LLM | Railway |
+| Web Speech API | Uvicorn | HuggingFace | ChromaDB |
+| CSS3 | Pydantic | all-MiniLM-L6-v2 | GitHub |
+| React Speech Recognition | LangChain | RAG Pipeline | MCP Protocol |
+
+---
+
+## 📂 Project Structure
 
 ```
 PaperPilotAI/
+│
 ├── backend/
 │   ├── agents/
-│   │   ├── paper_fetcher_agent.py
-│   │   ├── classifier_agent.py
-│   │   ├── explainer_agent.py
-│   │   ├── learning_path_agent.py
-│   │   └── supervisor.py
-│   ├── ml/
-│   │   └── classifier.py
+│   │   ├── supervisor.py          # LangGraph pipeline orchestrator
+│   │   ├── paper_fetcher_agent.py # Multi-source paper retrieval
+│   │   ├── classifier_agent.py    # Difficulty classification
+│   │   ├── explainer_agent.py     # RAG-powered explanations
+│   │   └── learning_path_agent.py # Path + gap generation
+│   │
 │   ├── rag/
-│   │   └── paper_rag.py
+│   │   └── paper_rag.py           # ChromaDB + HuggingFace RAG
+│   │
+│   ├── ml/
+│   │   └── classifier.py          # Difficulty scoring logic
+│   │
 │   ├── tools/
-│   │   └── arxiv_tool.py
-│   └── api.py
+│   │   └── arxiv_tool.py          # ArXiv + Semantic Scholar + OpenAlex
+│   │
+│   └── api.py                     # FastAPI routes
+│
 ├── frontend/
 │   └── paperpilot-ui/
-│       └── src/
-│           ├── App.js
-│           └── App.css
-└── Dockerfile
+│       ├── src/
+│       │   ├── App.js             # Main React component
+│       │   └── App.css            # Dark/light theme styles
+│       └── public/
+│
+├── mcp_server.py                  # MCP server for IDE integration
+├── mcp_config.json                # MCP configuration
+├── .env                           # Environment variables
+└── README.md
 ```
 
 ---
 
-## Running Locally
+## 🚀 Getting Started
 
-**Backend**
+### Prerequisites
+
+- Python 3.12+
+- Node.js 18+
+- Git
+
+---
+
+### 1️⃣ Clone the Repository
+
 ```bash
-cd backend
-pip install -r requirements.txt
-uvicorn api:app --reload --port 8001
+git clone https://github.com/prishabhatia46/PaperPilotAI.git
+cd PaperPilotAI
 ```
 
-**Frontend**
+---
+
+### 2️⃣ Backend Setup
+
+```bash
+python -m venv venv
+venv\Scripts\activate      # Windows
+source venv/bin/activate   # macOS/Linux
+
+pip install -r requirements.txt
+```
+
+Create `.env` file:
+
+```bash
+GROQ_API_KEY=your_groq_api_key
+GOOGLE_API_KEY=your_google_api_key
+SEMANTIC_SCHOLAR_API_KEY=your_semantic_scholar_key
+```
+
+Start the backend:
+
+```bash
+uvicorn backend.api:app --reload --port 8001
+```
+
+API available at `http://localhost:8001`
+
+---
+
+### 3️⃣ Frontend Setup
+
 ```bash
 cd frontend/paperpilot-ui
 npm install
 npm start
 ```
 
-Add a `.env` file in `/backend` with:
+Frontend available at `http://localhost:3000`
+
+---
+
+## 🔐 Environment Variables
+
+| Variable | Description |
+|---|---|
+| `GROQ_API_KEY` | Groq LLM API key (free at console.groq.com) |
+| `GOOGLE_API_KEY` | Google Gemini API key (optional fallback) |
+| `SEMANTIC_SCHOLAR_API_KEY` | Semantic Scholar API key (free at semanticscholar.org) |
+
+---
+
+## 📡 API Overview
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/search` | Multi-agent paper search pipeline |
+| POST | `/analyze-url` | Analyze paper from ArXiv URL |
+| POST | `/chat` | Ask AI about a specific paper |
+| POST | `/compare` | Compare two papers side-by-side |
+| POST | `/quiz` | Generate MCQ quiz for a paper |
+| POST | `/related` | Find related papers |
+| POST | `/explain` | Adaptive explanation (Beginner/Student/Expert) |
+
+---
+
+## 📁 Application Modules
+
+| Module | Responsibility |
+|---|---|
+| 🧠 Supervisor Agent | LangGraph pipeline orchestration |
+| 📡 Fetcher Agent | Multi-source paper retrieval with relevance scoring |
+| 🏷️ Classifier Agent | Difficulty classification (Beginner/Intermediate/Advanced) |
+| 💡 Explainer Agent | RAG-powered paper explanations |
+| 🗺️ Path Generator | Learning path + research gap identification |
+| 🔌 MCP Server | IDE integration via Model Context Protocol |
+
+---
+
+## 🛣 Roadmap
+
+### ✅ Completed
+- [x] Multi-agent LangGraph pipeline
+- [x] RAG pipeline with ChromaDB
+- [x] Multi-source paper retrieval (ArXiv + Semantic Scholar + OpenAlex)
+- [x] Difficulty classification
+- [x] Adaptive explanations (3 audience levels)
+- [x] Learning path generation
+- [x] Research gap identification
+- [x] Paper comparison
+- [x] Quiz mode
+- [x] Voice search
+- [x] ArXiv URL analyzer
+- [x] MCP server for IDE integration
+- [x] Production deployment (Vercel + Railway)
+
+### 🚧 In Progress
+- [ ] CSS dark/light theme tabs fix
+- [ ] Related papers relevance improvement
+- [ ] Docker setup
+
+### 💡 Future Ideas
+- [ ] PDF upload and analysis
+- [ ] User accounts and saved libraries
+- [ ] Citation graph visualization
+- [ ] Email digest of weekly papers
+- [ ] Slack / Notion integration
+- [ ] Collaborative reading lists
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome.
+
+1. Fork the repository
+2. Create a feature branch
+```bash
+git checkout -b feature/new-feature
 ```
-GROQ_API_KEY=your_key
-SEMANTIC_SCHOLAR_API_KEY=your_key
+3. Commit changes
+```bash
+git commit -m "Add new feature"
+```
+4. Push and open a Pull Request
+```bash
+git push origin feature/new-feature
 ```
 
 ---
 
-## Deployment
+## 👩‍💻 Author
 
-- Backend deployed on **Railway** via Docker (Python 3.11)
-- Frontend deployed on **Vercel**
-- Auto-deploys on every push to `master`
+### Prisha Bhatia
+
+Computer Science Engineering Student
+
+AI • Machine Learning • Full Stack Development
+
+[![GitHub](https://img.shields.io/badge/GitHub-prishabhatia46-black?style=for-the-badge&logo=github)](https://github.com/prishabhatia46)
 
 ---
 
-Built by [Prisha Bhatia](https://github.com/prishabhatia46)
+## 📄 License
+
+Distributed under the MIT License.
+
+---
+
+⭐ *If you found this project useful, consider giving it a star!*
+
+**PaperPilotAI** — *Find, Understand, and Master Any Research Topic*
