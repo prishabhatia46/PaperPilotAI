@@ -25,7 +25,7 @@ A production-ready AI-powered research assistant that helps students, researcher
 
 PaperPilotAI is a **production-grade multi-agent research assistant** built for students, researchers, and academics who want to go beyond keyword search and actually understand the papers they find.
 
-Rather than building another basic paper search tool, PaperPilotAI orchestrates multiple specialized AI agents that work in parallel — fetching papers across ArXiv, Semantic Scholar, and OpenAlex, classifying their difficulty, generating layered explanations, building personalized learning paths, and identifying research gaps — all in a single search.
+Rather than building another basic paper search tool, PaperPilotAI orchestrates multiple specialized AI agents that work in sequence — fetching papers across ArXiv, Semantic Scholar, and OpenAlex, classifying their difficulty, generating layered explanations, building personalized learning paths, and identifying research gaps — all in a single search.
 
 Built with a modern async FastAPI backend, LangGraph multi-agent orchestration, ChromaDB vector store, and a React frontend with voice search and dark/light themes.
 
@@ -55,13 +55,13 @@ Three audience levels — Beginner, Student, Expert — powered by Groq LLM. The
 Paper abstracts are chunked, embedded with HuggingFace `all-MiniLM-L6-v2`, and stored in ChromaDB. Explanations are grounded in retrieved context, not hallucinated.
 
 ### 📊 Difficulty Classification
-A custom rule-based + heuristic classifier scores each paper as Beginner / Intermediate / Advanced based on citation count, publication year, and abstract vocabulary — giving users an instant signal before they commit to reading.
+A custom rule-based classifier scores each paper as Beginner / Intermediate / Advanced based on citation count, publication year, and abstract vocabulary — giving users an instant signal before they commit to reading.
 
 ### 🗺️ Research Gap Finder
 After analyzing fetched papers, the LLM identifies unexplored areas in the topic — a feature almost no research tool offers, and genuinely useful for project ideation and thesis topics.
 
 ### 🔌 MCP Server
-A custom Model Context Protocol server exposes ScholarPath tools so any AI agent — Claude Desktop, VS Code Copilot — can use PaperPilotAI's search and learning path generation directly from the IDE.
+A custom Model Context Protocol server exposes PaperPilotAI tools so any AI agent — Claude Desktop, VS Code Copilot — can use paper search and learning path generation directly from the IDE.
 
 ---
 
@@ -78,21 +78,21 @@ A custom Model Context Protocol server exposes ScholarPath tools so any AI agent
 | 📚 Learning | ⚡ Power Features |
 |---|---|
 | Personalized learning path | Paper comparison (side-by-side AI analysis) |
-| Step-by-step reading order | Quiz mode (MCQ with scoring) |
-| Research gap identification | Related paper suggestions |
-| Reading progress tracker | PDF / print export |
-| Mark as read | MCP server for IDE integration |
+| Step-by-step reading order | Related paper suggestions |
+| Research gap identification | PDF / print export |
+| Reading progress tracker | MCP server for IDE integration |
+| Mark as read | Dark / Light theme |
 
 ---
 
 ## 🏗 System Architecture
 
-```
+```mermaid
 graph TD
     User["👤 Student / Researcher"]
-    User --> Frontend["React Frontend\n(Vercel)"]
-    Frontend --> API["FastAPI Backend\n(Railway - Port 8001)"]
-    API --> Supervisor["🧠 Supervisor Agent\n(LangGraph)"]
+    User --> Frontend["⚛️ React Frontend\nVercel"]
+    Frontend --> API["⚡ FastAPI Backend\nRailway — Port 8001"]
+    API --> Supervisor["🧠 Supervisor Agent\nLangGraph"]
     Supervisor --> Fetcher["📡 Fetcher Agent"]
     Supervisor --> Classifier["🏷️ Classifier Agent"]
     Supervisor --> Explainer["💡 Explainer Agent"]
@@ -102,43 +102,43 @@ graph TD
     Fetcher --> OpenAlex["OpenAlex API"]
     Explainer --> RAG["RAG Pipeline"]
     RAG --> ChromaDB[("ChromaDB\nVector Store")]
-    RAG --> Embeddings["HuggingFace\nEmbeddings"]
-    Explainer --> Groq["Groq LLM\n(llama-3.3-70b)"]
+    RAG --> Embeddings["HuggingFace\nall-MiniLM-L6-v2"]
+    Explainer --> Groq["Groq LLM\nllama-3.3-70b-versatile"]
     PathGen --> Groq
-    API --> MCP["MCP Server\n(IDE Integration)"]
+    API --> MCP["🔌 MCP Server\nIDE Integration"]
 ```
 
 ---
 
 ## 🔄 Agent Pipeline Flow
 
-```
+```mermaid
 flowchart LR
-    A["User Query"] --> B["Supervisor Agent"]
-    B --> C["Fetcher Agent\nArXiv + Semantic Scholar + OpenAlex"]
-    C --> D["Classifier Agent\nDifficulty Scoring"]
-    D --> E["Explainer Agent\nRAG + Groq LLM"]
-    E --> F["Path Generator Agent\nLearning Path + Research Gaps"]
-    F --> G["React Frontend\nPapers + Path + Gaps"]
+    A["🔍 User Query"] --> B["🧠 Supervisor Agent\nLangGraph"]
+    B --> C["📡 Fetcher Agent\nArXiv + Semantic Scholar\n+ OpenAlex"]
+    C --> D["🏷️ Classifier Agent\nDifficulty Scoring\nBeginner / Intermediate / Advanced"]
+    D --> E["💡 Explainer Agent\nRAG + Groq LLM\nELI5 / Technical / Limitations"]
+    E --> F["🗺️ Path Generator\nLearning Path\n+ Research Gaps"]
+    F --> G["⚛️ React Frontend\nPapers + Path + Gaps"]
 
-    B2["Paper URL"] --> H["URL Analyzer\nDirect ArXiv Fetch"]
-    H --> E
+    H["🔗 ArXiv URL"] --> I["📄 URL Analyzer\nDirect Paper Fetch"]
+    I --> E
 ```
 
 ---
 
 ## 🧠 RAG Pipeline
 
-```
+```mermaid
 flowchart TD
-    A["Paper Abstract"] --> B["Text Chunker\nRecursiveCharacterTextSplitter\nchunk=500, overlap=100"]
-    B --> C["HuggingFace Embeddings\nall-MiniLM-L6-v2"]
-    C --> D[("ChromaDB\nVector Store")]
-    E["User Query / Paper Context"] --> F["Semantic Search"]
+    A["📄 Paper Abstract"] --> B["✂️ Text Chunker\nRecursiveCharacterTextSplitter\nchunk=500 overlap=100"]
+    B --> C["🤗 HuggingFace Embeddings\nall-MiniLM-L6-v2"]
+    C --> D[("🗄️ ChromaDB\nVector Store")]
+    E["❓ User Context / Paper"] --> F["🔍 Semantic Search"]
     D --> F
-    F --> G["Retrieved Chunks"]
-    G --> H["Groq LLM\nllama-3.3-70b-versatile"]
-    H --> I["ELI5 / Technical / Limitations\nExplanation"]
+    F --> G["📋 Retrieved Chunks"]
+    G --> H["🤖 Groq LLM\nllama-3.3-70b-versatile"]
+    H --> I["📝 ELI5 / Technical\n/ Limitations Explanation"]
 ```
 
 ---
@@ -177,33 +177,33 @@ PaperPilotAI/
 │
 ├── backend/
 │   ├── agents/
-│   │   ├── supervisor.py          # LangGraph pipeline orchestrator
-│   │   ├── paper_fetcher_agent.py # Multi-source paper retrieval
-│   │   ├── classifier_agent.py    # Difficulty classification
-│   │   ├── explainer_agent.py     # RAG-powered explanations
-│   │   └── learning_path_agent.py # Path + gap generation
+│   │   ├── supervisor.py              # LangGraph pipeline orchestrator
+│   │   ├── paper_fetcher_agent.py     # Multi-source paper retrieval
+│   │   ├── classifier_agent.py        # Difficulty classification
+│   │   ├── explainer_agent.py         # RAG-powered explanations
+│   │   └── learning_path_agent.py     # Learning path + gap generation
 │   │
 │   ├── rag/
-│   │   └── paper_rag.py           # ChromaDB + HuggingFace RAG
+│   │   └── paper_rag.py               # ChromaDB + HuggingFace RAG
 │   │
 │   ├── ml/
-│   │   └── classifier.py          # Difficulty scoring logic
+│   │   └── classifier.py              # Difficulty scoring logic
 │   │
 │   ├── tools/
-│   │   └── arxiv_tool.py          # ArXiv + Semantic Scholar + OpenAlex
+│   │   └── arxiv_tool.py              # ArXiv + Semantic Scholar + OpenAlex
 │   │
-│   └── api.py                     # FastAPI routes
+│   └── api.py                         # FastAPI routes
 │
 ├── frontend/
 │   └── paperpilot-ui/
 │       ├── src/
-│       │   ├── App.js             # Main React component
-│       │   └── App.css            # Dark/light theme styles
+│       │   ├── App.js                 # Main React component
+│       │   └── App.css                # Dark / light theme styles
 │       └── public/
 │
-├── mcp_server.py                  # MCP server for IDE integration
-├── mcp_config.json                # MCP configuration
-├── .env                           # Environment variables
+├── mcp_server.py                      # MCP server for IDE integration
+├── mcp_config.json                    # MCP configuration
+├── .env                               # Environment variables
 └── README.md
 ```
 
@@ -214,7 +214,7 @@ PaperPilotAI/
 ### Prerequisites
 
 - Python 3.12+
-- Node.js 18+
+- Node.js 18+ (for React frontend)
 - Git
 
 ---
@@ -232,15 +232,19 @@ cd PaperPilotAI
 
 ```bash
 python -m venv venv
-venv\Scripts\activate      # Windows
-source venv/bin/activate   # macOS/Linux
+
+# Windows
+venv\Scripts\activate
+
+# macOS / Linux
+source venv/bin/activate
 
 pip install -r requirements.txt
 ```
 
 Create `.env` file:
 
-```bash
+```env
 GROQ_API_KEY=your_groq_api_key
 GOOGLE_API_KEY=your_google_api_key
 SEMANTIC_SCHOLAR_API_KEY=your_semantic_scholar_key
@@ -272,9 +276,9 @@ Frontend available at `http://localhost:3000`
 
 | Variable | Description |
 |---|---|
-| `GROQ_API_KEY` | Groq LLM API key (free at console.groq.com) |
+| `GROQ_API_KEY` | Groq LLM API key — free at [console.groq.com](https://console.groq.com) |
 | `GOOGLE_API_KEY` | Google Gemini API key (optional fallback) |
-| `SEMANTIC_SCHOLAR_API_KEY` | Semantic Scholar API key (free at semanticscholar.org) |
+| `SEMANTIC_SCHOLAR_API_KEY` | Free at [semanticscholar.org](https://www.semanticscholar.org/product/api) |
 
 ---
 
@@ -286,9 +290,8 @@ Frontend available at `http://localhost:3000`
 | POST | `/analyze-url` | Analyze paper from ArXiv URL |
 | POST | `/chat` | Ask AI about a specific paper |
 | POST | `/compare` | Compare two papers side-by-side |
-| POST | `/quiz` | Generate MCQ quiz for a paper |
 | POST | `/related` | Find related papers |
-| POST | `/explain` | Adaptive explanation (Beginner/Student/Expert) |
+| POST | `/explain` | Adaptive explanation (Beginner / Student / Expert) |
 
 ---
 
@@ -297,9 +300,9 @@ Frontend available at `http://localhost:3000`
 | Module | Responsibility |
 |---|---|
 | 🧠 Supervisor Agent | LangGraph pipeline orchestration |
-| 📡 Fetcher Agent | Multi-source paper retrieval with relevance scoring |
-| 🏷️ Classifier Agent | Difficulty classification (Beginner/Intermediate/Advanced) |
-| 💡 Explainer Agent | RAG-powered paper explanations |
+| 📡 Fetcher Agent | Multi-source paper retrieval with LLM relevance scoring |
+| 🏷️ Classifier Agent | Difficulty classification (Beginner / Intermediate / Advanced) |
+| 💡 Explainer Agent | RAG-powered paper explanations via ChromaDB + Groq |
 | 🗺️ Path Generator | Learning path + research gap identification |
 | 🔌 MCP Server | IDE integration via Model Context Protocol |
 
@@ -316,16 +319,10 @@ Frontend available at `http://localhost:3000`
 - [x] Learning path generation
 - [x] Research gap identification
 - [x] Paper comparison
-- [x] Quiz mode
 - [x] Voice search
 - [x] ArXiv URL analyzer
 - [x] MCP server for IDE integration
 - [x] Production deployment (Vercel + Railway)
-
-### 🚧 In Progress
-- [ ] CSS dark/light theme tabs fix
-- [ ] Related papers relevance improvement
-- [ ] Docker setup
 
 ### 💡 Future Ideas
 - [ ] PDF upload and analysis
@@ -334,6 +331,7 @@ Frontend available at `http://localhost:3000`
 - [ ] Email digest of weekly papers
 - [ ] Slack / Notion integration
 - [ ] Collaborative reading lists
+- [ ] Docker setup
 
 ---
 
@@ -359,11 +357,9 @@ git push origin feature/new-feature
 
 ## 👩‍💻 Author
 
-### Prisha Bhatia
+**Prisha Bhatia**
 
-Computer Science Engineering Student
-
-AI • Machine Learning • Full Stack Development
+Computer Science Engineering Student | AI • Machine Learning • Full Stack Development
 
 [![GitHub](https://img.shields.io/badge/GitHub-prishabhatia46-black?style=for-the-badge&logo=github)](https://github.com/prishabhatia46)
 
