@@ -15,7 +15,7 @@ A production-ready AI-powered research assistant that helps students, researcher
 
 ## 🎥 Product Walkthrough
 
-[![Watch Demo](https://img.shields.io/badge/▶_Watch_Demo-Google_Drive-red?style=for-the-badge&logo=google-drive)](https://drive.google.com/file/d/1z4Cl5T10Y4taQrNmDTErgvc26ACFFjZ9/view?usp=sharing)
+[![Watch Demo](https://img.shields.io/badge/Watch_Demo-Google_Drive-red?style=for-the-badge&logo=google-drive)](https://drive.google.com/file/d/1z4Cl5T10Y4taQrNmDTErgvc26ACFFjZ9/view?usp=sharing)
 
 *Click to watch a full walkthrough of the application.*
 
@@ -52,7 +52,7 @@ Not a chatbot — a pipeline of specialized agents. A Supervisor Agent coordinat
 Three audience levels — Beginner, Student, Expert — powered by Groq LLM. The same paper explained differently based on who's asking.
 
 ### 🔍 RAG-Powered Understanding
-Paper abstracts are chunked, embedded with HuggingFace `all-MiniLM-L6-v2`, and stored in ChromaDB. Explanations are grounded in retrieved context, not hallucinated.
+Paper abstracts are chunked using LangChain's `RecursiveCharacterTextSplitter`, embedded with HuggingFace `all-MiniLM-L6-v2`, and stored in ChromaDB. Explanations are grounded in retrieved context, not hallucinated.
 
 ### 📊 Difficulty Classification
 A custom rule-based classifier scores each paper as Beginner / Intermediate / Advanced based on citation count, publication year, and abstract vocabulary — giving users an instant signal before they commit to reading.
@@ -89,23 +89,23 @@ A custom Model Context Protocol server exposes PaperPilotAI tools so any AI agen
 
 ```mermaid
 graph TD
-    User["👤 Student / Researcher"]
-    User --> Frontend["⚛️ React Frontend\nVercel"]
-    Frontend --> API["⚡ FastAPI Backend\nRailway — Port 8001"]
-    API --> Supervisor["🧠 Supervisor Agent\nLangGraph"]
-    Supervisor --> Fetcher["📡 Fetcher Agent"]
-    Supervisor --> Classifier["🏷️ Classifier Agent"]
-    Supervisor --> Explainer["💡 Explainer Agent"]
-    Supervisor --> PathGen["🗺️ Path Generator Agent"]
+    User["Student / Researcher"]
+    User --> Frontend["React Frontend\nVercel"]
+    Frontend --> API["FastAPI Backend\nRailway - Port 8001"]
+    API --> Supervisor["Supervisor Agent\nLangGraph"]
+    Supervisor --> Fetcher["Fetcher Agent"]
+    Supervisor --> Classifier["Classifier Agent"]
+    Supervisor --> Explainer["Explainer Agent"]
+    Supervisor --> PathGen["Path Generator Agent"]
     Fetcher --> ArXiv["ArXiv API"]
     Fetcher --> SemanticScholar["Semantic Scholar API"]
     Fetcher --> OpenAlex["OpenAlex API"]
-    Explainer --> RAG["RAG Pipeline"]
+    Explainer --> RAG["RAG Pipeline\nLangChain"]
     RAG --> ChromaDB[("ChromaDB\nVector Store")]
     RAG --> Embeddings["HuggingFace\nall-MiniLM-L6-v2"]
     Explainer --> Groq["Groq LLM\nllama-3.3-70b-versatile"]
     PathGen --> Groq
-    API --> MCP["🔌 MCP Server\nIDE Integration"]
+    API --> MCP["MCP Server\nIDE Integration"]
 ```
 
 ---
@@ -114,14 +114,14 @@ graph TD
 
 ```mermaid
 flowchart LR
-    A["🔍 User Query"] --> B["🧠 Supervisor Agent\nLangGraph"]
-    B --> C["📡 Fetcher Agent\nArXiv + Semantic Scholar\n+ OpenAlex"]
-    C --> D["🏷️ Classifier Agent\nDifficulty Scoring\nBeginner / Intermediate / Advanced"]
-    D --> E["💡 Explainer Agent\nRAG + Groq LLM\nELI5 / Technical / Limitations"]
-    E --> F["🗺️ Path Generator\nLearning Path\n+ Research Gaps"]
-    F --> G["⚛️ React Frontend\nPapers + Path + Gaps"]
+    A["User Query"] --> B["Supervisor Agent\nLangGraph"]
+    B --> C["Fetcher Agent\nArXiv + Semantic Scholar\n+ OpenAlex"]
+    C --> D["Classifier Agent\nDifficulty Scoring\nBeginner / Intermediate / Advanced"]
+    D --> E["Explainer Agent\nRAG + LangChain + Groq LLM\nELI5 / Technical / Limitations"]
+    E --> F["Path Generator\nLearning Path\n+ Research Gaps"]
+    F --> G["React Frontend\nPapers + Path + Gaps"]
 
-    H["🔗 ArXiv URL"] --> I["📄 URL Analyzer\nDirect Paper Fetch"]
+    H["ArXiv URL"] --> I["URL Analyzer\nDirect Paper Fetch"]
     I --> E
 ```
 
@@ -131,14 +131,14 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A["📄 Paper Abstract"] --> B["✂️ Text Chunker\nRecursiveCharacterTextSplitter\nchunk=500 overlap=100"]
-    B --> C["🤗 HuggingFace Embeddings\nall-MiniLM-L6-v2"]
-    C --> D[("🗄️ ChromaDB\nVector Store")]
-    E["❓ User Context / Paper"] --> F["🔍 Semantic Search"]
+    A["Paper Abstract"] --> B["LangChain Text Splitter\nRecursiveCharacterTextSplitter\nchunk=500 overlap=100"]
+    B --> C["HuggingFace Embeddings\nall-MiniLM-L6-v2"]
+    C --> D[("ChromaDB\nVector Store")]
+    E["User Context / Paper"] --> F["Semantic Similarity Search"]
     D --> F
-    F --> G["📋 Retrieved Chunks"]
-    G --> H["🤖 Groq LLM\nllama-3.3-70b-versatile"]
-    H --> I["📝 ELI5 / Technical\n/ Limitations Explanation"]
+    F --> G["Retrieved Chunks"]
+    G --> H["Groq LLM\nllama-3.3-70b-versatile"]
+    H --> I["ELI5 / Technical / Limitations\nExplanation"]
 ```
 
 ---
@@ -153,6 +153,7 @@ flowchart TD
 | **LLM** | Groq (llama-3.3-70b-versatile) |
 | **Vector Store** | ChromaDB |
 | **Embeddings** | HuggingFace all-MiniLM-L6-v2 |
+| **Text Splitting** | LangChain RecursiveCharacterTextSplitter |
 | **Paper Sources** | ArXiv + Semantic Scholar + OpenAlex |
 | **Deployment** | Vercel (frontend) + Railway (backend) |
 
@@ -164,9 +165,9 @@ flowchart TD
 |---|---|---|---|
 | React 18 | FastAPI | LangGraph | Vercel |
 | Axios | Python 3.12 | Groq LLM | Railway |
-| Web Speech API | Uvicorn | HuggingFace | ChromaDB |
-| CSS3 | Pydantic | all-MiniLM-L6-v2 | GitHub |
-| React Speech Recognition | LangChain | RAG Pipeline | MCP Protocol |
+| Web Speech API | Uvicorn | HuggingFace Embeddings | ChromaDB |
+| CSS3 | Pydantic | LangChain | GitHub |
+| React Speech Recognition | LangChain | all-MiniLM-L6-v2 | MCP Protocol |
 
 ---
 
@@ -184,7 +185,7 @@ PaperPilotAI/
 │   │   └── learning_path_agent.py     # Learning path + gap generation
 │   │
 │   ├── rag/
-│   │   └── paper_rag.py               # ChromaDB + HuggingFace RAG
+│   │   └── paper_rag.py               # LangChain + ChromaDB + HuggingFace RAG
 │   │
 │   ├── ml/
 │   │   └── classifier.py              # Difficulty scoring logic
@@ -299,12 +300,12 @@ Frontend available at `http://localhost:3000`
 
 | Module | Responsibility |
 |---|---|
-| 🧠 Supervisor Agent | LangGraph pipeline orchestration |
-| 📡 Fetcher Agent | Multi-source paper retrieval with LLM relevance scoring |
-| 🏷️ Classifier Agent | Difficulty classification (Beginner / Intermediate / Advanced) |
-| 💡 Explainer Agent | RAG-powered paper explanations via ChromaDB + Groq |
-| 🗺️ Path Generator | Learning path + research gap identification |
-| 🔌 MCP Server | IDE integration via Model Context Protocol |
+| Supervisor Agent | LangGraph pipeline orchestration |
+| Fetcher Agent | Multi-source paper retrieval with LLM relevance scoring |
+| Classifier Agent | Difficulty classification (Beginner / Intermediate / Advanced) |
+| Explainer Agent | RAG-powered explanations via LangChain + ChromaDB + Groq |
+| Path Generator | Learning path + research gap identification |
+| MCP Server | IDE integration via Model Context Protocol |
 
 ---
 
@@ -312,7 +313,7 @@ Frontend available at `http://localhost:3000`
 
 ### ✅ Completed
 - [x] Multi-agent LangGraph pipeline
-- [x] RAG pipeline with ChromaDB
+- [x] RAG pipeline with LangChain + ChromaDB
 - [x] Multi-source paper retrieval (ArXiv + Semantic Scholar + OpenAlex)
 - [x] Difficulty classification
 - [x] Adaptive explanations (3 audience levels)
