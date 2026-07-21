@@ -64,11 +64,15 @@ Write only the abstract, nothing else.""").content
 
 async def explain_single(paper: dict, llm) -> dict:
     loop = asyncio.get_event_loop()
-    
+
+    context = retrieve_paper_chunks(paper.get("title", ""))
+    if not context:
+        context = paper['abstract'][:400]
+
     def _call():
-        eli5 = llm.invoke(f"Explain this paper in 3 simple sentences for a beginner. No jargon. No labels or numbering. Just plain sentences.\nTitle: {paper['title']}\nAbstract: {paper['abstract'][:400]}").content
-        technical = llm.invoke(f"Summarize key technical contributions in 3 sentences. No labels or numbering. Just plain sentences.\nTitle: {paper['title']}\nAbstract: {paper['abstract'][:400]}").content
-        limitations = llm.invoke(f"List 2 limitations of this paper in plain sentences. No labels or numbering.\nTitle: {paper['title']}\nAbstract: {paper['abstract'][:400]}").content
+        eli5 = llm.invoke(f"Explain this paper in 3 simple sentences for a beginner. No jargon. No labels or numbering. Just plain sentences.\nTitle: {paper['title']}\nContext: {context}").content
+        technical = llm.invoke(f"Summarize key technical contributions in 3 sentences. No labels or numbering. Just plain sentences.\nTitle: {paper['title']}\nContext: {context}").content
+        limitations = llm.invoke(f"List 2 limitations of this paper in plain sentences. No labels or numbering.\nTitle: {paper['title']}\nContext: {context}").content
         return eli5.strip(), technical.strip(), limitations.strip()
 
     eli5, technical, limitations = await loop.run_in_executor(None, _call)
@@ -136,5 +140,20 @@ def retrieve_chat_context(paper_title: str, question: str, k: int = 3) -> str:
         if not docs:
             return ""
         return "\n\n".join(doc.page_content for doc in docs)
+    except:
+        return ""
+def retrieve_paper_chunks(paper_title: str, k: int = 3) -> str:
+    """
+    Explainer Agent ke liye: raw abstract bhejne ki jagah,
+    ChromaDB se is paper (title se filter) ke top-k stored chunks nikalo.
+    Kuch na mile toh empty string return karo (caller abstract fallback kare).
+    """
+    try:
+        vectorstore = get_vectorstore()
+        result = vectorstore.get(where={"title": paper_title}, limit=k)
+        docs = result.get("documents", [])
+        if not docs:
+            return ""
+        return "\n\n".join(docs[:k])
     except:
         return ""
