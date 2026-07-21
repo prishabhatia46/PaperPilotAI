@@ -1,11 +1,20 @@
 from langchain_chroma import Chroma
-from langchain_community.embeddings import FastEmbedEmbeddings
+from fastembed import TextEmbedding
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import asyncio
 import os
+class _FastEmbedWrapper:
+    def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
+        self.model = TextEmbedding(model_name=model_name)
+
+    def embed_documents(self, texts):
+        return [e.tolist() for e in self.model.embed(texts)]
+
+    def embed_query(self, text):
+        return list(self.model.embed([text]))[0].tolist()
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
@@ -13,7 +22,7 @@ _embeddings = None
 def get_embeddings():
     global _embeddings
     if _embeddings is None:
-        _embeddings = FastEmbedEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        _embeddings = _FastEmbedWrapper(model_name="sentence-transformers/all-MiniLM-L6-v2")
     return _embeddings
 
 def get_vectorstore():
