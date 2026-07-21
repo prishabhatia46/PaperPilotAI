@@ -111,3 +111,21 @@ def retrieve_papers_from_chromadb(query: str, threshold: int = 3) -> list:
         return papers
     except:
         return []
+def retrieve_chat_context(paper_title: str, question: str, k: int = 3) -> str:
+    """
+    /chat ke liye: question embed karke ChromaDB se
+    isi paper (title se filter) ke top-k relevant chunks nikalo.
+    Kuch na mile toh empty string return karo (caller abstract fallback kare).
+    """
+    try:
+        vectorstore = get_vectorstore()
+        docs = vectorstore.similarity_search(
+            question,
+            k=k,
+            filter={"title": paper_title}
+        )
+        if not docs:
+            return ""
+        return "\n\n".join(doc.page_content for doc in docs)
+    except:
+        return ""
